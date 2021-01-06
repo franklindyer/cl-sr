@@ -24,13 +24,18 @@ class Attempt:
 
 class Card:
 
-	def __init__(self, id, prompt, answer):
+	def __init__(self, id, prompt, answer, initial_wait=timedelta(hours = 1)):
 		self.id = id
+		self.created = datetime.now()
 		self.prompt = prompt
 		self.answer = answer
 		self.attempts = []
 		self.num_attempts = 0
-		self.waittime = timedelta(hours = 1)
+		self.last_attempt = datetime.now()
+		self.waittime = initial_wait
+
+	def is_due(self):
+		return (datetime.now() > self.last_attempt + self.waittime)
 
 	def new_attempt(self, value, start_time, end_time):
 		self.num_attempts += 1
@@ -38,7 +43,7 @@ class Card:
 		attempt = Attempt(self.num_attempts, value, time_elapsed)
 		self.attempts.append(attempt)
 
-	def update_wait(multiplier, min_wait, max_wait):
+	def update_wait(self, multiplier, min_wait, max_wait):
 		wait_seconds = self.waittime.total_seconds()
 		new_waittime = timedelta(seconds = wait_seconds * multiplier)
 		if new_waittime < min_wait:
@@ -51,21 +56,26 @@ class Card:
 		start_time = datetime.now()
 		guess = input(self.prompt)
 		end_time = datetime.now()
+		self.last_attempt = end_time
 		correct = (guess == self.answer)
 		self.new_attempt(correct, start_time, end_time)
 		return correct
 				
 	def to_dict(self):
+		created_string = self.created.strftime("%m/%d/%Y, %H:%M:%S")
 		attempts_dict = [a.to_dict() for a in self.attempts]
+		last_attempt_string = self.last_attempt.strftime("%m/%d/%Y, %H:%M:%S")
 		waittime_string = self.waittime.total_seconds()
-		dict = {"id": self.id, "prompt": self.prompt, "answer": self.answer, "attempts": attempts_dict, "num_attempts": self.num_attempts, "waittime": waittime_string}
+		dict = {"id": self.id, "created": created_string, "prompt": self.prompt, "answer": self.answer, "attempts": attempts_dict, "num_attempts": self.num_attempts, "last_attempt": last_attempt_string, "waittime": waittime_string}
 		return dict
 
 	def from_dict(self, dict):
 		self.id = dict["id"]
+		self.created = datetime.strptime(dict["created"], "%m/%d/%Y, %H:%M:%S")
 		self.prompt = dict["prompt"]
 		self.answer = dict["answer"]
 		self.attempts = [Attempt(0, 0, 0).from_dict(d) for d in dict["attempts"]]
 		self.num_attempts = dict["num_attempts"]
+		self.last_attempt = datetime.strptime(dict["last_attempt"], "%m/%d/%Y, %H:%M:%S") 
 		self.waittime = timedelta(seconds = dict["waittime"])
 		return self
