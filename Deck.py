@@ -12,7 +12,7 @@ class Quiz():
 	def to_dict(self):
 		start_time_string = self.start_time.strftime("%m/%d/%Y, %H:%M:%S")
 		end_time_string = self.end_time.strftime("%m/%d/%Y, %H:%M:%S")
-		cards_dict = [c.to_dict() for c in self.cards]
+		cards_dict = [c.to_dict(dictify_attempts=False) for c in self.cards]
 		dict = {"id": self.id, "start_time": start_time_string, "end_time": end_time_string, "cards": cards_dict, "results": self.results}
 		return dict
 
@@ -115,6 +115,7 @@ class Deck():
 		dict_string = json.dumps(self.to_dict())
 		f.write(dict_string)
 		f.close()
+		for q in self.quizzes: q.save(self.name)
 		
 	def load(self, deckname):
 		filename = "deck-" + deckname + ".json"

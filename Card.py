@@ -54,19 +54,24 @@ class Card:
 
 	def quiz(self):
 		start_time = datetime.now()
-		guess = input(self.prompt)
+		print("Prompt: " + self.prompt)
+		guess = input("Answer: ")
 		end_time = datetime.now()
 		self.last_attempt = end_time
 		correct = (guess == self.answer)
+		while guess != self.answer:
+			print("Incorrect! The correct answer was '" + self.answer + "'.")
+			guess = input("Answer: ")
 		self.new_attempt(correct, start_time, end_time)
 		return correct
 				
-	def to_dict(self):
+	def to_dict(self, dictify_attempts=True):
 		created_string = self.created.strftime("%m/%d/%Y, %H:%M:%S")
 		attempts_dict = [a.to_dict() for a in self.attempts]
 		last_attempt_string = self.last_attempt.strftime("%m/%d/%Y, %H:%M:%S")
 		waittime_string = self.waittime.total_seconds()
-		dict = {"id": self.id, "created": created_string, "prompt": self.prompt, "answer": self.answer, "attempts": attempts_dict, "num_attempts": self.num_attempts, "last_attempt": last_attempt_string, "waittime": waittime_string}
+		dict = {"id": self.id, "created": created_string, "prompt": self.prompt, "answer": self.answer, "num_attempts": self.num_attempts, "last_attempt": last_attempt_string, "waittime": waittime_string}
+		if dictify_attempts: dict["attempts"] = attempts_dict
 		return dict
 
 	def from_dict(self, dict):
