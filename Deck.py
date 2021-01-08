@@ -9,6 +9,26 @@ class Quiz():
 		self.cards = cards
 		self.results = results
 
+	def get_stats(self):
+		num_cards = len(self.cards)
+		num_correct = 0
+		for r in self.results:
+			if self.results[r]: num_correct += 1
+		percent_correct = int(100 * num_correct/num_cards)
+		percent_incorrect = 100 - percent_correct
+		num_incorrect = num_cards - num_correct
+		total_time = self.end_time - self.start_time
+		av_seconds = round(total_time.total_seconds()/num_cards, 2)
+		return {
+			"num-cards": num_cards,
+			"num-correct": num_correct,
+			"percent-correct": percent_correct,
+			"num-incorrect": num_incorrect,
+			"percent-incorrect": percent_incorrect,
+			"total-time": total_time,
+			"average-seconds": av_seconds
+		}
+
 	def to_dict(self):
 		start_time_string = self.start_time.strftime("%m/%d/%Y, %H:%M:%S")
 		end_time_string = self.end_time.strftime("%m/%d/%Y, %H:%M:%S")
@@ -66,6 +86,7 @@ class Deck():
 		self.num_quizzes += 1
 		quiz = Quiz(self.num_quizzes, start_time, cards, results)
 		self.quizzes.append(quiz)
+		return quiz
 
 	def check_due_cards(self):
 		self.due_cards = [c.id for c in self.cards if c.is_due()]
@@ -85,7 +106,8 @@ class Deck():
 			multiplier = self.settings["incorrect-multiplier"]
 			if correct: multiplier = self.settings["correct-multiplier"]
 			c.update_wait(multiplier, min_wait, max_wait)
-		self.add_quiz(start_time, card_copies, results)
+		quiz = self.add_quiz(start_time, card_copies, results)
+		return quiz
 
 	def to_dict(self):
 		cards_dict = [c.to_dict() for c in self.cards]
