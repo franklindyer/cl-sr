@@ -73,8 +73,8 @@ class Deck():
 			"correct-multiplier": 1.5,
 			"incorrect-multiplier": 0.2,
 			"max-wait": 31557600,
-			"min-wait": 5,
-			"initial-wait": 5
+			"min-wait": 3600,
+			"initial-wait": 3600
 		}
 
 	def add_card(self, prompt, answer):
@@ -98,14 +98,17 @@ class Deck():
 		card_copies = [Card(0,0,0).from_dict(c.to_dict()) for c in shuffled_cards]
 		random.shuffle(shuffled_cards)
 		results = {}
-		min_wait = timedelta(seconds = self.settings["min-wait"])
-		max_wait = timedelta(seconds = self.settings["max-wait"])
+		min_wait = timedelta(seconds = float(self.settings["min-wait"]))
+		max_wait = timedelta(seconds = float(self.settings["max-wait"]))
 		for c in shuffled_cards:
+			print("")
 			correct = c.quiz()
 			results[c.id] = correct
 			multiplier = self.settings["incorrect-multiplier"]
 			if correct: multiplier = self.settings["correct-multiplier"]
+			multiplier = float(multiplier)
 			c.update_wait(multiplier, min_wait, max_wait)
+		print("")
 		quiz = self.add_quiz(start_time, card_copies, results)
 		return quiz
 

@@ -34,6 +34,11 @@ class Card:
 		self.last_attempt = datetime.now()
 		self.waittime = initial_wait
 
+	def card_report(self):
+		string = str(self.id) + ". "
+		string += self.prompt + " || " + self.answer
+		return string
+
 	def is_due(self):
 		return (datetime.now() > self.last_attempt + self.waittime)
 

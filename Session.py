@@ -17,7 +17,7 @@ class Session():
 		}
 
 	def error_message(self, error_name):
-		print(self.error_messages[error_name])
+		print("\n" + self.error_messages[error_name])
 
 	def due_report(self):
 		for name in self.decks:
@@ -30,11 +30,26 @@ class Session():
 		self.decklist.append(name)
 		self.decks[name] = Deck(name)
 
+	def delete_deck(self, name):
+		self.decklist.remove(name)
+
 	def list_decks(self):
+		print("")
 		for name in self.decklist:
 			end = "\n"
 			if name in self.settings["ignore-decks"]: end = " (ignored)\n"
 			print(name, end=end)
+		if not bool(self.decklist):
+			print("No decks found.")
+
+	def deck_report(self):
+		if bool(self.decks):
+			print("")
+			for name in self.decks:
+				deck = self.decks[name]
+				num_due = len(deck.check_due_cards())
+				report = name + " - " + str(num_due) + " cards due"
+				print(report)
 
 	def open_deck(self, deckname):
 		if deckname in self.decks:
@@ -58,11 +73,11 @@ class Session():
 			self.error_message("no-such-deck")
 
 	def list_settings(self):
-		print("GENERAL SETTINGS:")
+		print("\nGENERAL SETTINGS:")
 		for s in self.settings:
 			print("{}: {}".format(s, self.settings[s]))
 		if self.current_deck:
-			print("DECK SETTINGS:")
+			print("\nDECK SETTINGS:")
 			current_deck = self.current_deck
 			for s in current_deck.settings:
 				print("{}: {}".format(s, current_deck.settings[s]))
@@ -79,9 +94,24 @@ class Session():
 	def add_cards(self, num_cards=1):
 		if self.current_deck:
 			for i in range(0, int(num_cards)):
+				print("")
 				prompt = input("Card prompt: ")
 				answer = input("Correct answer: ")
 				self.current_deck.add_card(prompt, answer)
+		else:
+			self.error_message("no-deck-open")
+
+	def search_cards(self, regex):
+		if self.current_deck:
+			deck = self.current_deck
+			print("")
+			matches = 0
+			for card in deck.cards:
+				if re.match(regex, card.prompt) or re.match(regex, card.answer):
+					matches += 1
+					print(card.card_report())
+			if matches == 0:
+				print("No matches found.")
 		else:
 			self.error_message("no-deck-open")
 
@@ -104,12 +134,14 @@ class Session():
 		self.load()
 		self.command_guide = {
 			"add-deck": self.add_deck,
+			"delete-deck": self.delete_deck,
 			"list-decks": self.list_decks,
 			"open-deck": self.open_deck,
 			"close-deck": self.close_deck,
 			"ignore-deck": self.ignore_deck,
 			"unignore-deck": self.unignore_deck,
 			"add-card": self.add_cards,
+			"search-cards": self.search_cards,
 			"quiz": self.quiz,
 			"list-settings": self.list_settings,
 			"configure": self.configure,
@@ -117,8 +149,11 @@ class Session():
 			"exit": lambda: print("Exiting...")		
 		}
 
+		self.deck_report()
+
 		command = ""
 		while command != "exit":
+			print("")
 			command_input = input(self.settings["input-prompt"] + " ")
 			command_strings = command_input.split(" ")
 			command = command_strings[0]
